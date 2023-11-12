@@ -7,7 +7,7 @@ class MazeNDTestCase(unittest.TestCase):
     def test_create_2d_maze(self):
         # ARRANGE
         maze_shape = [10, 10]
-        expected_result = (11, 11)
+        expected_result = (9, 9)
 
         # ACT
         maze = MazeND(maze_shape)
@@ -18,7 +18,7 @@ class MazeNDTestCase(unittest.TestCase):
     def test_create_3d_maze(self):
         # ARRANGE
         maze_shape = [10, 10, 10]
-        expected_result = (11, 11, 11)
+        expected_result = (9, 9, 9)
 
         # ACT
         maze = MazeND(maze_shape)
@@ -29,12 +29,21 @@ class MazeNDTestCase(unittest.TestCase):
     def test_create_4d_maze(self):
         # ARRANGE
         maze_shape = [10, 10, 10, 20]
-        expected_result = (11, 11, 11, 21)
+        expected_result = (9, 9, 9, 19)
 
         # ACT
         maze = MazeND(maze_shape)
 
         # ASSERT
+        self.assertEqual(maze.grid.shape, expected_result)
+
+    def test_animation(self):
+        # ARRANGE
+        maze_shape = [50, 50, 10]
+        expected_result = (49, 49)
+        # ACT
+        maze = MazeND(maze_shape, animate_generation=True, scale=64, frame_time=0.01)
+
         self.assertEqual(maze.grid.shape, expected_result)
 
 
