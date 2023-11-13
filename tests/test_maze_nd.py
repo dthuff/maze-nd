@@ -39,10 +39,10 @@ class MazeNDTestCase(unittest.TestCase):
 
     def test_animation(self):
         # ARRANGE
-        maze_shape = [50, 50, 10]
+        maze_shape = [40, 20, 10]
         expected_result = (49, 49)
         # ACT
-        maze = MazeND(maze_shape, animate_generation=True, scale=64, frame_time=0.01)
+        maze = MazeND(maze_shape, animate_generation=True, scale=16, frame_time=0.1)
 
         self.assertEqual(maze.grid.shape, expected_result)
 

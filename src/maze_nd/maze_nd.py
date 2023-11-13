@@ -143,45 +143,105 @@ class MazeND:
             for cell in frontier_of_frontier_cell:
                 frontier.add(cell)
 
-    def draw(self, passage_color=(255, 255, 255), wall_color=(0, 0, 0), highlighted_cell: tuple = None,
-             highlight_color=(0, 255, 0), wait_key=1):
+    def get_plane_indices(self):
         """
-        Draws an image of the maze with cv2.imshow()
-        :param passage_color: colour of the passages
-        :param wall_color: colour of the walls
-        :param highlighted_cell: desired cell to highlight
-        :param highlight_color: colour of highlight
-        :param wait_key: argument to pass to cv2.waitKey()
+        Get a tuple of 2D plane indices spanning the maze. Used for drawing different plane_indices of the maze.
+        E.g., for a 3D maze, return ((0, 1), (1, 2), (2, 0)).
+
+        Returns
+        -------
+        plane_indices: tuple[tuple[int]]
+            Tuple of dimension indices.
         """
-        img: Image = self.get_img(passage_color, wall_color, highlighted_cell, highlight_color)
-        img_resized = cv2.resize(np.asarray(img),
-                                 (600, 600),
+        plane_indices = ()
+        ndim = len(self.grid.shape)
+        for i in range(ndim):
+            plane_indices += (i, np.mod(i + 1, ndim)),
+        return plane_indices
+
+    def draw(self, passage_color: tuple[int, int, int] = (255, 255, 255),
+             wall_color: tuple[int, int, int] = (0, 0, 0), highlighted_cell: tuple[int] = None,
+             highlight_color: tuple[int, int, int] = (0, 255, 0)):
+        """
+        Draw the maze.
+
+        Parameters
+        ----------
+        passage_color: tuple[int, int, int]
+            BGR color tuple to use for passage cells
+        wall_color: tuple[int, int, int]
+            BGR color tuple to use for wall cells
+        highlighted_cell: tuple[int]
+            Coordinates of cell to highlight
+        highlight_color: tuple[int, int, int]
+            BGR color tuple to use for highlighted cell
+        """
+        ndim = len(self.grid.shape)
+
+        border_img = Image.new('RGB', (1, max(self.grid.shape)), color=(255, 0, 0))
+        montage_img = border_img
+        for plane_indices in self.get_plane_indices():
+            img: Image = self.get_img(plane_indices, passage_color, wall_color, highlighted_cell, highlight_color)
+            img = cv2.copyMakeBorder(np.asarray(img), 0, max(self.grid.shape) - img.height, 0, 0,
+                                     cv2.BORDER_CONSTANT, value=(128, 128, 128))
+            montage_img = np.concatenate((montage_img, img, border_img), axis=1)
+
+        # img_resized = cv2.resize(np.asarray(montage_img), (600 * ndim, 600), interpolation=cv2.INTER_NEAREST)
+        img_resized = cv2.resize(np.asarray(montage_img),
+                                 dsize=(self._scale * montage_img.shape[1], self._scale * montage_img.shape[0]),
                                  interpolation=cv2.INTER_NEAREST)
+
         cv2.imshow('maze', img_resized)
-        cv2.waitKey(wait_key)
+        cv2.waitKey(1)
 
     # noinspection PyUnresolvedReferences
-    def get_img(self, passage_color=(0, 0, 0), wall_color=(255, 255, 255), highlighted_cell: tuple = None,
-                highlight_color=(0, 255, 0)) -> Image:
+    def get_img(self, plane_indices: tuple[int, int] = (0, 1), passage_color: tuple[int, int, int] = (0, 0, 0),
+                wall_color: tuple[int, int, int] = (255, 255, 255),
+                highlighted_cell: tuple[int] = None,
+                highlight_color: tuple[int, int, int] = (0, 255, 0)) -> Image:
         """
-        Fetches an image representation of the maze
-        :param passage_color: colour of the passages
-        :param wall_color: colour of the walls
-        :param highlighted_cell: desired cell to highlight
-        :param highlight_color: colour of highlight
-        :return: image of the maze
+        Returns an Image representation of the maze at this point in generation.
+
+        Parameters
+        ----------
+        plane_indices: tuple[int, int]
+            A 2-tuple of dimension indices to draw
+        passage_color: tuple[int, int, int]
+            BGR color tuple to use for passage cells
+        wall_color: tuple[int, int, int]
+            BGR color tuple to use for wall cells
+        highlighted_cell: tuple[int]
+            Coordinates of cell to highlight
+        highlight_color: tuple[int, int, int]
+            BGR color tuple to use for highlighted cell
+        Returns
+        -------
+        im: PIL.Image.
+            Image representation of the maze
         """
-        im = Image.new('RGB', (self.grid.shape[0], self.grid.shape[1]))
+        im = Image.new('RGB', (self.grid.shape[plane_indices[0]], self.grid.shape[plane_indices[1]]))
         pixels: PyAccess = im.load()
-        for x in range(self.grid.shape[0]):
-            for y in range(self.grid.shape[1]):
-                if self.grid[x, y]:
+        self.get_plane(plane_indices=plane_indices, highlighted_cell=highlighted_cell)
+        for x in range(self.grid.shape[plane_indices[0]]):
+            for y in range(self.grid.shape[plane_indices[1]]):
+                if self.plane[x, y]:
                     pixels[x, y] = passage_color
                 else:
                     pixels[x, y] = wall_color
         if highlighted_cell is not None:
-            pixels[highlighted_cell] = highlight_color
+            pixels[highlighted_cell[plane_indices[0]], highlighted_cell[plane_indices[1]]] = highlight_color
         return im
+
+    def get_plane(self, plane_indices: tuple[int, int], highlighted_cell: tuple[int]):
+        ndim = len(self.grid.shape)
+        dims_to_remove = set(range(ndim)).difference(set(plane_indices))
+        dims_to_remove = sorted(dims_to_remove, reverse=True)
+        self.plane = self.grid
+        for dim in dims_to_remove:
+            self.plane = self.plane.take(indices=highlighted_cell[dim], axis=dim)
+        # Dumb hack to reverse axis order for final plane when plane_indices are (ndim, 0)
+        if plane_indices[1] < plane_indices[0]:
+            self.plane = np.transpose(self.plane)
 
 
 def _force_odd_dimension(shape: list[int]) -> list[int]:
