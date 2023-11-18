@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "maze-nd"
+version = "0.1.0"
+description = "A python package for generating and vizualizing n-dimensional mazes."
+authors = ["Daniel <huffdanielt@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+numpy = "^1.26.2"
+opencv-python = "^4.8.1.78"
+pillow = "^10.1.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
