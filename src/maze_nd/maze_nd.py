@@ -18,13 +18,20 @@ class MazeND:
         True = Wall
     """
 
-    def __init__(self, shape: list[int], animate_generation: bool = False, scale: int = 16, frame_time: float = 0.1):
+    def __init__(self,
+                 shape: list[int],
+                 animate_generation: bool = False,
+                 scale: int = 16,
+                 frame_time_ms: int = 1,
+                 wait_to_destroy_image: bool = False):
         self.grid = np.ones(_force_odd_dimension(shape), dtype=bool)
         self.plane = None
         self.animate_generation = animate_generation
         self._scale = scale  # Pixel scale of maze image. Used if animate_generation is True.
-        self._frame_time = frame_time  # time for 1 frame, in sec. Used if animate_generation is True.
+        self._frame_time_ms = frame_time_ms  # time delay for 1 frame, in ms. Used if animate_generation is True.
         self.generate()
+        if self.animate_generation and wait_to_destroy_image:
+            cv2.waitKey(0)
 
     def get_frontier(self, seed_pt: list) -> set:
         """
@@ -134,7 +141,6 @@ class MazeND:
             frontier.remove(a_frontier_cell)
             if self.animate_generation:
                 self.draw(highlighted_cell=a_frontier_cell)
-                time.sleep(self._frame_time)
             neighbors = self.get_neighbors(list(a_frontier_cell))
             if neighbors:
                 a_neighbor_cell = random.choice(tuple(neighbors))
@@ -159,9 +165,9 @@ class MazeND:
             plane_indices += (i, np.mod(i + 1, ndim)),
         return plane_indices
 
-    def draw(self, passage_color: tuple[int, int, int] = (255, 255, 255),
-             wall_color: tuple[int, int, int] = (0, 0, 0), highlighted_cell: tuple[int] = None,
-             highlight_color: tuple[int, int, int] = (0, 255, 0)):
+    def draw(self, passage_color: tuple[int, int, int] = (19, 59, 26),
+             wall_color: tuple[int, int, int] = (80, 145, 82), highlighted_cell: tuple[int] = None,
+             highlight_color: tuple[int, int, int] = (24, 24, 184)):
         """
         Draw the maze.
 
@@ -176,9 +182,7 @@ class MazeND:
         highlight_color: tuple[int, int, int]
             BGR color tuple to use for highlighted cell
         """
-        ndim = len(self.grid.shape)
-
-        border_img = Image.new('RGB', (1, max(self.grid.shape)), color=(255, 0, 0))
+        border_img = Image.new('RGB', (1, max(self.grid.shape)), color=(8, 8, 102))
         montage_img = border_img
         for plane_indices in self.get_plane_indices():
             img: Image = self.get_img(plane_indices, passage_color, wall_color, highlighted_cell, highlight_color)
@@ -191,13 +195,13 @@ class MazeND:
                                  interpolation=cv2.INTER_NEAREST)
 
         cv2.imshow('maze', img_resized)
-        cv2.waitKey(1)
+        cv2.waitKey(self._frame_time_ms)
 
     # noinspection PyUnresolvedReferences
-    def get_img(self, plane_indices: tuple[int, int] = (0, 1), passage_color: tuple[int, int, int] = (0, 0, 0),
-                wall_color: tuple[int, int, int] = (255, 255, 255),
+    def get_img(self, plane_indices: tuple[int, int] = (0, 1), passage_color: tuple[int, int, int] = (82, 145, 80),
+                wall_color: tuple[int, int, int] = (26, 59, 19),
                 highlighted_cell: tuple[int] = None,
-                highlight_color: tuple[int, int, int] = (0, 255, 0)) -> Image:
+                highlight_color: tuple[int, int, int] = (184, 24, 24)) -> Image:
         """
         Returns an Image representation of the maze at this point in generation.
 
@@ -238,9 +242,6 @@ class MazeND:
         self.plane = self.grid
         for dim in dims_to_remove:
             self.plane = self.plane.take(indices=highlighted_cell[dim], axis=dim)
-        # Dumb hack to reverse axis order for final plane when plane_indices are (ndim, 0)
-        if plane_indices[1] < plane_indices[0]:
-            self.plane = np.transpose(self.plane)
 
 
 def _force_odd_dimension(shape: list[int]) -> list[int]:
