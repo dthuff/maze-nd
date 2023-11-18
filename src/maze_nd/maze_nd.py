@@ -146,7 +146,7 @@ class MazeND:
     def get_plane_indices(self):
         """
         Get a tuple of 2D plane indices spanning the maze. Used for drawing different plane_indices of the maze.
-        E.g., for a 3D maze, return ((0, 1), (1, 2), (2, 0)).
+        E.g., for a 3D maze, return ((0, 1), (1, 2)).
 
         Returns
         -------
@@ -155,7 +155,7 @@ class MazeND:
         """
         plane_indices = ()
         ndim = len(self.grid.shape)
-        for i in range(ndim):
+        for i in range(ndim-1):
             plane_indices += (i, np.mod(i + 1, ndim)),
         return plane_indices
 
@@ -186,7 +186,6 @@ class MazeND:
                                      cv2.BORDER_CONSTANT, value=(128, 128, 128))
             montage_img = np.concatenate((montage_img, img, border_img), axis=1)
 
-        # img_resized = cv2.resize(np.asarray(montage_img), (600 * ndim, 600), interpolation=cv2.INTER_NEAREST)
         img_resized = cv2.resize(np.asarray(montage_img),
                                  dsize=(self._scale * montage_img.shape[1], self._scale * montage_img.shape[0]),
                                  interpolation=cv2.INTER_NEAREST)
