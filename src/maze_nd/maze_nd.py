@@ -15,10 +15,7 @@ class MazeND:
         Credit for 2D implementation of Prim's Algorithm to Arne Stenkrona: https://github.com/ArneStenkrona/MazeFun
     """
 
-    def __init__(self,
-                 shape: list[int],
-                 animate_generation: bool = False,
-                 theme: str = "default",
+    def __init__(self, shape: list[int], animate_generation: bool = False, theme: str = "default",
                  wait_to_destroy_image: bool = False):
         self.grid = np.ones(_force_odd_dimension(shape), dtype=bool)
         self.generate(animate=animate_generation, theme=theme)

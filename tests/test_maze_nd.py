@@ -1,5 +1,5 @@
 import unittest
-import numpy as np
+
 from maze_nd.maze_nd import MazeND
 
 

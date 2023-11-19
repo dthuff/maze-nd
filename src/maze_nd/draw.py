@@ -8,7 +8,7 @@ from maze_nd.colors import get_color_dictionary
 
 
 def draw(maze, highlighted_cell: tuple[int, int, int], theme: str, expand_highlighted_cell: bool = True,
-         frame_time_ms: int = 25, draw_scale: int = 16):
+         frame_time_ms: int = 40, draw_scale: int = 16):
     """
     Draw the maze.
 
@@ -28,11 +28,12 @@ def draw(maze, highlighted_cell: tuple[int, int, int], theme: str, expand_highli
         Pixel scale of maze image.
     """
     color_dict = get_color_dictionary(theme)
-    border_img = Image.new('RGB', (1, max(maze.grid.shape)), color=color_dict["border"])
+    border_height = _get_border_height(maze.grid.shape)
+    border_img = Image.new('RGB', (1, border_height), color=color_dict["border"])
     montage_img = border_img
     for plane_indices in get_plane_indices(maze):
         img: Image = get_img(maze, plane_indices, highlighted_cell, color_dict, expand_highlighted_cell)
-        img = cv2.copyMakeBorder(np.asarray(img), 0, max(maze.grid.shape) - img.height, 0, 0,
+        img = cv2.copyMakeBorder(np.asarray(img), 0, border_height - img.height, 0, 0,
                                  cv2.BORDER_CONSTANT, value=(128, 128, 128))
         montage_img = np.concatenate((montage_img, img, border_img), axis=1)
 
@@ -83,14 +84,14 @@ def get_img(maze, plane_indices: tuple[int, int], highlighted_cell: tuple[int, .
             if expand_highlighted_cell:
                 for i in [-1, 0, 1]:
                     for j in [-1, 0, 1]:
-                        pixels[hci[0]+i, hci[1]+j] = a_highlight_color
+                        pixels[hci[0] + i, hci[1] + j] = a_highlight_color
             else:
                 pixels[hci[0], hci[1]] = a_highlight_color
         else:
             if expand_highlighted_cell:
                 for i in [-1, 0, 1]:
                     for j in [-1, 0, 1]:
-                        pixels[hci[0]+i, hci[1]+j] = color_dict["highlight"]
+                        pixels[hci[0] + i, hci[1] + j] = color_dict["highlight"]
             else:
                 pixels[hci[0], hci[1]] = color_dict["highlight"]
 
@@ -106,6 +107,14 @@ def get_plane(maze, plane_indices: tuple[int, int], highlighted_cell: tuple[int,
     return plane
 
 
+def _get_border_height(shape):
+    if len(shape) == 2:
+        border_height = shape[1]
+    else:
+        border_height = max(shape)
+    return border_height
+
+
 def get_plane_indices(maze):
     """
     Get a tuple of 2D plane indices spanning the maze. Used for drawing different plane_indices of the maze.
@@ -118,6 +127,6 @@ def get_plane_indices(maze):
     """
     plane_indices = ()
     ndim = len(maze.grid.shape)
-    for i in range(ndim-1):
+    for i in range(ndim - 1):
         plane_indices += (i, np.mod(i + 1, ndim)),
     return plane_indices
