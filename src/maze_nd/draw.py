@@ -1,3 +1,5 @@
+import random
+
 import cv2
 import numpy as np
 from PIL import Image, PyAccess
@@ -5,7 +7,7 @@ from PIL import Image, PyAccess
 from maze_nd.colors import get_color_dictionary
 
 
-def draw(maze, highlighted_cell: tuple[int, int, int], theme: str, frame_time_ms: int = 1, draw_scale: int = 16):
+def draw(maze, highlighted_cell: tuple[int, int, int], theme: str, frame_time_ms: int = 20, draw_scale: int = 16):
     """
     Draw the maze.
 
@@ -36,7 +38,9 @@ def draw(maze, highlighted_cell: tuple[int, int, int], theme: str, frame_time_ms
                              interpolation=cv2.INTER_NEAREST)
 
     cv2.imshow('maze', img_resized)
-    cv2.waitKey(frame_time_ms)
+    # TODO: frame_time_ms not being respected? what is frame_tiem_this_frame late in generation?
+    frame_time_this_frame = int(frame_time_ms + 700 * np.exp(-0.04 * np.sum(np.logical_not(maze.grid))))
+    cv2.waitKey(frame_time_this_frame)
 
 
 def get_img(maze, plane_indices: tuple[int, int], highlighted_cell: tuple[int, int, int], color_dict: dict) -> Image:
@@ -64,11 +68,18 @@ def get_img(maze, plane_indices: tuple[int, int], highlighted_cell: tuple[int, i
     for x in range(maze.grid.shape[plane_indices[0]]):
         for y in range(maze.grid.shape[plane_indices[1]]):
             if plane[x, y]:
-                pixels[x, y] = color_dict["passage"]
-            else:
                 pixels[x, y] = color_dict["wall"]
+            else:
+                pixels[x, y] = color_dict["passage"]
     if highlighted_cell is not None:
-        pixels[highlighted_cell[plane_indices[0]], highlighted_cell[plane_indices[1]]] = color_dict["highlight"]
+        if isinstance(color_dict["highlight"], list):
+            a_highlight_color = random.choice(color_dict["highlight"])
+            for i in [-1, 0, 1]:
+                for j in [-1, 0, 1]:
+                    pixels[highlighted_cell[plane_indices[0]]+i, highlighted_cell[plane_indices[1]]+j] = a_highlight_color
+        else:
+            pixels[highlighted_cell[plane_indices[0]], highlighted_cell[plane_indices[1]]] = color_dict["highlight"]
+
     return im
 
 
