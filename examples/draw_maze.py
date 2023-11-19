@@ -4,7 +4,7 @@ import argparse
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("theme", type=str)
+    parser.add_argument("--theme", type=str)
     parser.add_argument("shape", type=int, nargs="*")
     parser.add_argument("--skip-animation", action='store_true', default=False)
     cl_args = parser.parse_args()
