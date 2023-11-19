@@ -22,7 +22,7 @@ class MazeND:
                  wait_to_destroy_image: bool = False):
         self.grid = np.ones(_force_odd_dimension(shape), dtype=bool)
         self.generate(animate=animate_generation, theme=theme)
-        if animate_generation and wait_to_destroy_image:
+        if wait_to_destroy_image:
             cv2.waitKey(0)
 
     def get_frontier(self, seed_pt: list) -> set:
@@ -132,7 +132,7 @@ class MazeND:
             a_frontier_cell = random.choice(tuple(frontier))
             frontier.remove(a_frontier_cell)
             if animate:
-                draw(self, highlighted_cell=a_frontier_cell, theme=theme)
+                draw(self, highlighted_cell=a_frontier_cell, theme=theme, expand_highlighted_cell=True)
             neighbors = self.get_neighbors(list(a_frontier_cell))
             if neighbors:
                 a_neighbor_cell = random.choice(tuple(neighbors))
@@ -140,6 +140,9 @@ class MazeND:
             frontier_of_frontier_cell = self.get_frontier(list(a_frontier_cell))
             for cell in frontier_of_frontier_cell:
                 frontier.add(cell)
+
+        self.connect(list(a_frontier_cell), list(a_neighbor_cell))
+        draw(self, highlighted_cell=a_frontier_cell, theme=theme, expand_highlighted_cell=False)
 
 
 def _force_odd_dimension(shape: list[int]) -> list[int]:

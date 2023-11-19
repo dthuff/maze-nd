@@ -7,7 +7,8 @@ from PIL import Image, PyAccess
 from maze_nd.colors import get_color_dictionary
 
 
-def draw(maze, highlighted_cell: tuple[int, int, int], theme: str, frame_time_ms: int = 20, draw_scale: int = 16):
+def draw(maze, highlighted_cell: tuple[int, int, int], theme: str, expand_highlighted_cell: bool = True,
+         frame_time_ms: int = 25, draw_scale: int = 16):
     """
     Draw the maze.
 
@@ -18,7 +19,9 @@ def draw(maze, highlighted_cell: tuple[int, int, int], theme: str, frame_time_ms
     highlighted_cell: tuple[int]
         Coordinates of cell to highlight
     theme: str
-        MAze color theme
+        Maze color theme
+    expand_highlighted_cell: bool
+        True during animation, false at end to ID goal cell.
     frame_time_ms: int
         Time to wait on each frame of generation in milliseconds.
     draw_scale: int
@@ -28,7 +31,7 @@ def draw(maze, highlighted_cell: tuple[int, int, int], theme: str, frame_time_ms
     border_img = Image.new('RGB', (1, max(maze.grid.shape)), color=color_dict["border"])
     montage_img = border_img
     for plane_indices in get_plane_indices(maze):
-        img: Image = get_img(maze, plane_indices, highlighted_cell, color_dict)
+        img: Image = get_img(maze, plane_indices, highlighted_cell, color_dict, expand_highlighted_cell)
         img = cv2.copyMakeBorder(np.asarray(img), 0, max(maze.grid.shape) - img.height, 0, 0,
                                  cv2.BORDER_CONSTANT, value=(128, 128, 128))
         montage_img = np.concatenate((montage_img, img, border_img), axis=1)
@@ -38,12 +41,12 @@ def draw(maze, highlighted_cell: tuple[int, int, int], theme: str, frame_time_ms
                              interpolation=cv2.INTER_NEAREST)
 
     cv2.imshow('maze', img_resized)
-    # TODO: frame_time_ms not being respected? what is frame_tiem_this_frame late in generation?
     frame_time_this_frame = int(frame_time_ms + 700 * np.exp(-0.04 * np.sum(np.logical_not(maze.grid))))
     cv2.waitKey(frame_time_this_frame)
 
 
-def get_img(maze, plane_indices: tuple[int, int], highlighted_cell: tuple[int, int, int], color_dict: dict) -> Image:
+def get_img(maze, plane_indices: tuple[int, int], highlighted_cell: tuple[int, ...], color_dict: dict,
+            expand_highlighted_cell: bool) -> Image:
     """
     Returns an Image representation of the maze at this point in generation.
 
@@ -57,6 +60,8 @@ def get_img(maze, plane_indices: tuple[int, int], highlighted_cell: tuple[int, i
         Coordinates of cell to highlight
     color_dict: dict
         Maze color dictionary.
+    expand_highlighted_cell: bool
+        True during animation, false at end to ID goal cell.
     Returns
     -------
     im: PIL.Image.
@@ -72,24 +77,32 @@ def get_img(maze, plane_indices: tuple[int, int], highlighted_cell: tuple[int, i
             else:
                 pixels[x, y] = color_dict["passage"]
     if highlighted_cell is not None:
+        hci = [highlighted_cell[plane_indices[0]], highlighted_cell[plane_indices[1]]]
         if isinstance(color_dict["highlight"], list):
             a_highlight_color = random.choice(color_dict["highlight"])
-            for i in [-1, 0, 1]:
-                for j in [-1, 0, 1]:
-                    pixels[highlighted_cell[plane_indices[0]]+i, highlighted_cell[plane_indices[1]]+j] = a_highlight_color
+            if expand_highlighted_cell:
+                for i in [-1, 0, 1]:
+                    for j in [-1, 0, 1]:
+                        pixels[hci[0]+i, hci[1]+j] = a_highlight_color
+            else:
+                pixels[hci[0], hci[1]] = a_highlight_color
         else:
-            pixels[highlighted_cell[plane_indices[0]], highlighted_cell[plane_indices[1]]] = color_dict["highlight"]
+            if expand_highlighted_cell:
+                for i in [-1, 0, 1]:
+                    for j in [-1, 0, 1]:
+                        pixels[hci[0]+i, hci[1]+j] = color_dict["highlight"]
+            else:
+                pixels[hci[0], hci[1]] = color_dict["highlight"]
 
     return im
 
 
-def get_plane(maze, plane_indices: tuple[int, int], highlighted_cell: tuple[int, int, int]):
+def get_plane(maze, plane_indices: tuple[int, int], highlighted_cell: tuple[int, ...]):
     ndim = len(maze.grid.shape)
     dims_to_remove = set(range(ndim)).difference(set(plane_indices))
-    dims_to_remove = sorted(dims_to_remove, reverse=True)
     plane = maze.grid
-    for dim in dims_to_remove:
-        plane = maze.grid.take(indices=highlighted_cell[dim], axis=dim)
+    for dim in sorted(dims_to_remove, reverse=True):
+        plane = plane.take(indices=highlighted_cell[dim], axis=dim)
     return plane
 
 
