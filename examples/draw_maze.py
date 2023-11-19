@@ -4,6 +4,7 @@ import argparse
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
+    parser.add_argument("theme", type=str)
     parser.add_argument("shape", type=int, nargs="*")
     cl_args = parser.parse_args()
     return cl_args
@@ -11,4 +12,4 @@ def parse_args() -> argparse.Namespace:
 
 if __name__ == "__main__":
     args = parse_args()
-    maze = MazeND(args.shape, animate_generation=True, wait_to_destroy_image=True)
+    maze = MazeND(args.shape, animate_generation=True, wait_to_destroy_image=True, theme=args.theme)

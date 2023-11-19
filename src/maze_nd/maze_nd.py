@@ -1,36 +1,28 @@
 import random
-import time
 
 import cv2
 import numpy as np
-from PIL import Image, PyAccess
 
-
-# Credit for initial 2D implementation of Prim's Algorithm to Arne Stenkrona
-# https://github.com/ArneStenkrona/MazeFun
-# Their implementation made the N-D implementation much easier! <3
+from maze_nd.draw import draw
 
 
 class MazeND:
     """
-    A maze data structure, represented as a boolean grid where
-        False = Passage - where the player can move
+    A maze data structure represented as a boolean grid where
+        False = Passage
         True = Wall
+
+        Credit for 2D implementation of Prim's Algorithm to Arne Stenkrona: https://github.com/ArneStenkrona/MazeFun
     """
 
     def __init__(self,
                  shape: list[int],
                  animate_generation: bool = False,
-                 scale: int = 16,
-                 frame_time_ms: int = 1,
+                 theme: str = "default",
                  wait_to_destroy_image: bool = False):
         self.grid = np.ones(_force_odd_dimension(shape), dtype=bool)
-        self.plane = None
-        self.animate_generation = animate_generation
-        self._scale = scale  # Pixel scale of maze image. Used if animate_generation is True.
-        self._frame_time_ms = frame_time_ms  # time delay for 1 frame, in ms. Used if animate_generation is True.
-        self.generate()
-        if self.animate_generation and wait_to_destroy_image:
+        self.generate(animate=animate_generation, theme=theme)
+        if animate_generation and wait_to_destroy_image:
             cv2.waitKey(0)
 
     def get_frontier(self, seed_pt: list) -> set:
@@ -80,7 +72,7 @@ class MazeND:
         Returns
         -------
         neighbors: set
-            Set of all neighbor cells
+            All neighbor cells
         """
         neighbors = set()
         if self.inside_maze(seed_pt):
@@ -113,7 +105,7 @@ class MazeND:
         self.grid[tuple(pt_between)] = False
         self.grid[tuple(pt1)] = False
 
-    def generate(self):
+    def generate(self, animate: bool = False, theme: str = "default"):
         """
         Generates a maze using Prim's algorithm
             Pseudo code:
@@ -139,8 +131,8 @@ class MazeND:
         while frontier:
             a_frontier_cell = random.choice(tuple(frontier))
             frontier.remove(a_frontier_cell)
-            if self.animate_generation:
-                self.draw(highlighted_cell=a_frontier_cell)
+            if animate:
+                draw(self, highlighted_cell=a_frontier_cell, theme=theme)
             neighbors = self.get_neighbors(list(a_frontier_cell))
             if neighbors:
                 a_neighbor_cell = random.choice(tuple(neighbors))
@@ -148,100 +140,6 @@ class MazeND:
             frontier_of_frontier_cell = self.get_frontier(list(a_frontier_cell))
             for cell in frontier_of_frontier_cell:
                 frontier.add(cell)
-
-    def get_plane_indices(self):
-        """
-        Get a tuple of 2D plane indices spanning the maze. Used for drawing different plane_indices of the maze.
-        E.g., for a 3D maze, return ((0, 1), (1, 2)).
-
-        Returns
-        -------
-        plane_indices: tuple[tuple[int]]
-            Tuple of dimension indices.
-        """
-        plane_indices = ()
-        ndim = len(self.grid.shape)
-        for i in range(ndim-1):
-            plane_indices += (i, np.mod(i + 1, ndim)),
-        return plane_indices
-
-    def draw(self, passage_color: tuple[int, int, int] = (19, 59, 26),
-             wall_color: tuple[int, int, int] = (80, 145, 82), highlighted_cell: tuple[int] = None,
-             highlight_color: tuple[int, int, int] = (24, 24, 184)):
-        """
-        Draw the maze.
-
-        Parameters
-        ----------
-        passage_color: tuple[int, int, int]
-            BGR color tuple to use for passage cells
-        wall_color: tuple[int, int, int]
-            BGR color tuple to use for wall cells
-        highlighted_cell: tuple[int]
-            Coordinates of cell to highlight
-        highlight_color: tuple[int, int, int]
-            BGR color tuple to use for highlighted cell
-        """
-        border_img = Image.new('RGB', (1, max(self.grid.shape)), color=(8, 8, 102))
-        montage_img = border_img
-        for plane_indices in self.get_plane_indices():
-            img: Image = self.get_img(plane_indices, passage_color, wall_color, highlighted_cell, highlight_color)
-            img = cv2.copyMakeBorder(np.asarray(img), 0, max(self.grid.shape) - img.height, 0, 0,
-                                     cv2.BORDER_CONSTANT, value=(128, 128, 128))
-            montage_img = np.concatenate((montage_img, img, border_img), axis=1)
-
-        img_resized = cv2.resize(np.asarray(montage_img),
-                                 dsize=(self._scale * montage_img.shape[1], self._scale * montage_img.shape[0]),
-                                 interpolation=cv2.INTER_NEAREST)
-
-        cv2.imshow('maze', img_resized)
-        cv2.waitKey(self._frame_time_ms)
-
-    # noinspection PyUnresolvedReferences
-    def get_img(self, plane_indices: tuple[int, int] = (0, 1), passage_color: tuple[int, int, int] = (82, 145, 80),
-                wall_color: tuple[int, int, int] = (26, 59, 19),
-                highlighted_cell: tuple[int] = None,
-                highlight_color: tuple[int, int, int] = (184, 24, 24)) -> Image:
-        """
-        Returns an Image representation of the maze at this point in generation.
-
-        Parameters
-        ----------
-        plane_indices: tuple[int, int]
-            A 2-tuple of dimension indices to draw
-        passage_color: tuple[int, int, int]
-            BGR color tuple to use for passage cells
-        wall_color: tuple[int, int, int]
-            BGR color tuple to use for wall cells
-        highlighted_cell: tuple[int]
-            Coordinates of cell to highlight
-        highlight_color: tuple[int, int, int]
-            BGR color tuple to use for highlighted cell
-        Returns
-        -------
-        im: PIL.Image.
-            Image representation of the maze
-        """
-        im = Image.new('RGB', (self.grid.shape[plane_indices[0]], self.grid.shape[plane_indices[1]]))
-        pixels: PyAccess = im.load()
-        self.get_plane(plane_indices=plane_indices, highlighted_cell=highlighted_cell)
-        for x in range(self.grid.shape[plane_indices[0]]):
-            for y in range(self.grid.shape[plane_indices[1]]):
-                if self.plane[x, y]:
-                    pixels[x, y] = passage_color
-                else:
-                    pixels[x, y] = wall_color
-        if highlighted_cell is not None:
-            pixels[highlighted_cell[plane_indices[0]], highlighted_cell[plane_indices[1]]] = highlight_color
-        return im
-
-    def get_plane(self, plane_indices: tuple[int, int], highlighted_cell: tuple[int]):
-        ndim = len(self.grid.shape)
-        dims_to_remove = set(range(ndim)).difference(set(plane_indices))
-        dims_to_remove = sorted(dims_to_remove, reverse=True)
-        self.plane = self.grid
-        for dim in dims_to_remove:
-            self.plane = self.plane.take(indices=highlighted_cell[dim], axis=dim)
 
 
 def _force_odd_dimension(shape: list[int]) -> list[int]:
