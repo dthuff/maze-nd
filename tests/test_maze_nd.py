@@ -6,8 +6,8 @@ from maze_nd.maze_nd import MazeND
 class MazeNDTestCase(unittest.TestCase):
     def test_create_2d_maze(self):
         # ARRANGE
-        maze_shape = [10, 10]
-        expected_result = (9, 9)
+        maze_shape = [60, 40]
+        expected_result = (59, 39)
 
         # ACT
         maze = MazeND(maze_shape)
