@@ -26,7 +26,7 @@ Poetry: https://python-poetry.org/docs/#installation
 
 # Usage
 ## Generating maze structures
-The MazeND class defines a maze data structures represented by a boolean array of arbitrary shape `maze.grid`.
+The MazeND class defines a maze data structure represented by a boolean array of arbitrary shape `maze.grid`.
 
 A 2D maze of 40 rows and 40 columns can be generated with:
 
