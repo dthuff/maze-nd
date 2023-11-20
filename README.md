@@ -48,7 +48,7 @@ A 7D maze:
 
     maze = MazeND([20, 20, 20, 10, 10, 20, 5])
 
-_**Caution**_: generation time is proportional to `np.prod(maze.shape)`. This can quickly blow up for mazes with more than 4 dimensions.
+_**Caution**_: generation time is proportional to `np.prod(maze.grid.shape)`. This can quickly blow up for mazes with more than 4 dimensions.
 
 
 ## Visualizing maze structures
