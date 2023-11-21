@@ -15,10 +15,10 @@ class MazeND:
         Credit for 2D implementation of Prim's Algorithm to Arne Stenkrona: https://github.com/ArneStenkrona/MazeFun
     """
 
-    def __init__(self, shape: list[int], animate_generation: bool = False, theme: str = "default",
-                 wait_to_destroy_image: bool = False):
+    def __init__(self, shape: list[int], animate_generation: bool = False, save_image: bool = True,
+                 theme: str = "default", wait_to_destroy_image: bool = False):
         self.grid = np.ones(_force_odd_dimension(shape), dtype=bool)
-        self.generate(animate=animate_generation, theme=theme)
+        self.generate(animate=animate_generation, save_image=save_image, theme=theme)
         if wait_to_destroy_image:
             cv2.waitKey(0)
 
@@ -102,7 +102,7 @@ class MazeND:
         self.grid[tuple(pt_between)] = False
         self.grid[tuple(pt1)] = False
 
-    def generate(self, animate: bool = False, theme: str = "default"):
+    def generate(self, animate: bool = False, save_image: bool = False, theme: str = "default"):
         """
         Generates a maze using Prim's algorithm
             Pseudo code:
@@ -139,7 +139,9 @@ class MazeND:
                 frontier.add(cell)
 
         self.connect(list(a_frontier_cell), list(a_neighbor_cell))
-        draw(self, highlighted_cell=a_frontier_cell, theme=theme, expand_highlighted_cell=False)
+        image = draw(self, highlighted_cell=a_frontier_cell, theme=theme, expand_highlighted_cell=False)
+        if save_image:
+            cv2.imwrite("./maze_image.png", image)
 
 
 def _force_odd_dimension(shape: list[int]) -> list[int]:

@@ -42,7 +42,7 @@ class MazeNDTestCase(unittest.TestCase):
         maze_shape = [11, 11]
         expected_result = (11, 11)
         # ACT
-        maze = MazeND(maze_shape, animate_generation=True)
+        maze = MazeND(maze_shape, animate_generation=True, save_image=False)
 
         self.assertEqual(maze.grid.shape, expected_result)
 

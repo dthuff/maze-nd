@@ -8,7 +8,7 @@ from maze_nd.colors import get_color_dictionary
 
 
 def draw(maze, highlighted_cell: tuple[int, int, int], theme: str, expand_highlighted_cell: bool = True,
-         frame_time_ms: int = 40, draw_scale: int = 16):
+         frame_time_ms: int = 40, draw_scale: int = 16) -> Image:
     """
     Draw the maze.
 
@@ -26,6 +26,11 @@ def draw(maze, highlighted_cell: tuple[int, int, int], theme: str, expand_highli
         Time to wait on each frame of generation in milliseconds.
     draw_scale: int
         Pixel scale of maze image.
+
+    Returns
+    -------
+    img_resized : Image
+        The maze image.
     """
     color_dict = get_color_dictionary(theme)
     border_height = _get_border_height(maze.grid.shape)
@@ -44,6 +49,7 @@ def draw(maze, highlighted_cell: tuple[int, int, int], theme: str, expand_highli
     cv2.imshow('maze', img_resized)
     frame_time_this_frame = int(frame_time_ms + 700 * np.exp(-0.04 * np.sum(np.logical_not(maze.grid))))
     cv2.waitKey(frame_time_this_frame)
+    return img_resized
 
 
 def get_img(maze, plane_indices: tuple[int, int], highlighted_cell: tuple[int, ...], color_dict: dict,
@@ -98,7 +104,24 @@ def get_img(maze, plane_indices: tuple[int, int], highlighted_cell: tuple[int, .
     return im
 
 
-def get_plane(maze, plane_indices: tuple[int, int], highlighted_cell: tuple[int, ...]):
+def get_plane(maze, plane_indices: tuple[int, int], highlighted_cell: tuple[int, ...]) -> np.ndarray:
+    """
+    Get a 2D plane of the maze for drawing.
+
+    Parameters
+    ----------
+    maze : MazeND
+        The maze object
+    plane_indices: tuple[int, int]
+        The two dimension indices of the plane to construct
+    highlighted_cell : tuple[int, ...]
+        The maze coordinates of the highlighted cell.
+
+    Returns
+    -------
+    plane: np.ndarray
+        A 2D array representing the plane of the maze along plane_indices and passing through highlighted_cell.
+    """
     ndim = len(maze.grid.shape)
     dims_to_remove = set(range(ndim)).difference(set(plane_indices))
     plane = maze.grid
@@ -107,7 +130,7 @@ def get_plane(maze, plane_indices: tuple[int, int], highlighted_cell: tuple[int,
     return plane
 
 
-def _get_border_height(shape):
+def _get_border_height(shape: tuple) -> int:
     if len(shape) == 2:
         border_height = shape[1]
     else:
@@ -115,10 +138,15 @@ def _get_border_height(shape):
     return border_height
 
 
-def get_plane_indices(maze):
+def get_plane_indices(maze) -> tuple:
     """
     Get a tuple of 2D plane indices spanning the maze. Used for drawing different plane_indices of the maze.
     E.g., for a 3D maze, return ((0, 1), (1, 2)).
+
+    Parameters
+    ----------
+    maze : MazeND
+        The maze object
 
     Returns
     -------
