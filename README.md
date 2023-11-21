@@ -22,7 +22,7 @@ Poetry: https://python-poetry.org/docs/#installation
     cd maze-nd/
     poetry install
 
-### ~~Or, install via pip:~~ (not published yet)
+### Or, install via pip:
 
     pip install maze-nd
 
