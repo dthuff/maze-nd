@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "maze-nd"
-version = "0.1.0"
+version = "0.1.1"
 description = "A python package for generating and visualizing n-dimensional mazes."
 authors = ["Daniel <huffdanielt@gmail.com>"]
 license = "MIT"
