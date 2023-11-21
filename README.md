@@ -1,3 +1,5 @@
+![A woodsy maze](https://github.com/dthuff/maze-nd/blob/master/examples/maze_woodsy_90_40.png)
+
 # maze-nd
 
 A python package for generating n-dimensional mazes via [randomized Prim's Algorithm](https://en.wikipedia.org/wiki/Maze_generation_algorithm)
