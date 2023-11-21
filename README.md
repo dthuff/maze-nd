@@ -1,4 +1,4 @@
-![A woodsy maze](https://github.com/dthuff/maze-nd/blob/master/examples/maze_woodsy_90_40.png)
+![A woodsy maze](https://github.com/dthuff/maze-nd/blob/master/examples/maze_kaboom_100_30.png)
 
 # maze-nd
 
@@ -59,6 +59,8 @@ The maze generation process can be visualized using `examples/draw_maze.py`:
 
     poetry run python draw_maze.py 40 40
 
+By default, this will save an image of the maze at `examples/maze_image.png`
+
 Any number of shape dimensions can be passed. A 3D maze can be generated via:
 
     poetry run python draw_maze.py 20 20 20
@@ -74,4 +76,18 @@ Fun color themes can be applied via `--theme`:
 
     poetry run python draw_maze.py --theme beachy 40 40
 
-Available themes are: `default`, `beachy`, `woodsy`, `christmas`, and `kaboom`.
+Available themes are: 
+`default`
+![A boring, default maze](https://github.com/dthuff/maze-nd/blob/master/examples/maze_default_90_40.png)
+
+`beachy`, 
+![A beachy maze](https://github.com/dthuff/maze-nd/blob/master/examples/maze_beachy_90_40.png)
+
+`woodsy`, 
+![A woodsy maze](https://github.com/dthuff/maze-nd/blob/master/examples/maze_woodsy_90_40.png)
+
+`christmas`, 
+![A festive, christmas maze](https://github.com/dthuff/maze-nd/blob/master/examples/maze_christmas_90_40.png)
+
+and `kaboom`.
+![An explosive, kaboom maze](https://github.com/dthuff/maze-nd/blob/master/examples/maze_kaboom_90_40.png)
